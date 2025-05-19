@@ -1,0 +1,4 @@
+flask
+transformers
+tensorflow
+numpy
