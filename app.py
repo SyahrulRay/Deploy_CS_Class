@@ -8,7 +8,9 @@ app = Flask(__name__)
 # Load model dan tokenizer
 model_path = "CS_Classification"
 tokenizer = DistilBertTokenizer.from_pretrained(model_path)
+print("✅ Model is loading...")
 model = TFDistilBertForSequenceClassification.from_pretrained(model_path)
+print("✅ Model loaded.")
 
 # Label mapping
 label_mapping = {
