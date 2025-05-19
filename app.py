@@ -9,9 +9,11 @@ app = Flask(__name__)
 model_path = "CS_Classification"
 tokenizer = DistilBertTokenizer.from_pretrained(model_path)
 print("✅ Model is loading...")
-model = TFDistilBertForSequenceClassification.from_pretrained(model_path)
-print("✅ Model loaded.")
-
+try:
+    model = TFDistilBertForSequenceClassification.from_pretrained(model_path)
+    print("✅ Model loaded.")
+except Exception as e:
+    print("❌ Model load failed:", e)
 # Label mapping
 label_mapping = {
     0: "Delivery",
