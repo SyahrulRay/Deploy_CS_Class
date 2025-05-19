@@ -1,6 +1,6 @@
-tensorflow==2.14.0
-transformers==4.31.0
-flask==2.2.5
-gunicorn==21.2.0
+tensorflow
+transformers
+flask
+gunicorn
 tf-keras
 numpy
