@@ -1,70 +1,40 @@
-from flask import Flask, request, jsonify
-from transformers import TFDistilBertForSequenceClassification, DistilBertTokenizer
+import gradio as gr
+from transformers import DistilBertTokenizer, TFDistilBertForSequenceClassification
 import tensorflow as tf
 import numpy as np
 
-app = Flask(__name__)
+# Load model & tokenizer
+model = TFDistilBertForSequenceClassification.from_pretrained("model")
+tokenizer = DistilBertTokenizer.from_pretrained("model")
 
-# Load model dan tokenizer
-model_path = "CS_Classification/"
-tokenizer = DistilBertTokenizer.from_pretrained(model_path)
-print("✅ Model is loading...")
-try:
-    model = TFDistilBertForSequenceClassification.from_pretrained(model_path)
-    print("✅ Model loaded.")
-except Exception as e:
-    print("❌ Model load failed:", e)
-# Label mapping
-label_mapping = {
-    0: "Delivery",
-    1: "Order",
-    2: "Payment",
-    3: "Refund"
-}
+# Daftar label
+labels = ["delivery", "order", "payment", "refund"]
+confidence_threshold = 0.5  # ambang batas prediksi minimum
 
+def classify_text(text):
+    inputs = tokenizer(text, return_tensors="tf", truncation=True, padding=True)
+    outputs = model(inputs)
+    probs = tf.nn.softmax(outputs.logits, axis=1)
+    
+    pred_confidence = np.max(probs)
+    pred_class_idx = tf.argmax(probs, axis=1).numpy()[0]
 
-CONFIDENCE_THRESHOLD = 0.7
+    if pred_confidence >= confidence_threshold:
+        predicted_label = labels[pred_class_idx]
+    else:
+        predicted_label = "unknown"
+    
+    # Buat dictionary hasil prediksi
+    result = {label: float(probs[0][i]) for i, label in enumerate(labels)}
+    result["unknown"] = 1.0 - pred_confidence if predicted_label == "unknown" else 0.0
 
-@app.route("/")
-def home():
-    return "Text Classification API (TensorFlow) is running!"
+    return result
 
-@app.route("/predict", methods=["POST"])
-def predict():
-    try:
-        data = request.get_json()
-        text = data.get("text")
+# Gradio interface
+interface = gr.Interface(fn=classify_text,
+                         inputs="text",
+                         outputs="label",
+                         title="Strict DistilBERT Text Classifier",
+                         description="Prediksi hanya salah satu dari 4 kelas. Jika tidak yakin, maka dikategorikan sebagai 'unknown'.")
 
-        if not text:
-            return jsonify({"error": "No text provided"}), 400
-
-        # Tokenisasi
-        inputs = tokenizer(text, return_tensors="tf", truncation=True, padding=True)
-        outputs = model(inputs)
-
-        # Ambil prediksi & confidence
-        logits = outputs.logits
-        probabilities = tf.nn.softmax(logits, axis=1).numpy()[0]
-        max_prob = np.max(probabilities)
-        predicted_class = int(np.argmax(probabilities))
-
-        # Cek threshold
-        if max_prob < CONFIDENCE_THRESHOLD:
-            predicted_label = "Unknown"
-        else:
-            predicted_label = label_mapping.get(predicted_class, "Unknown")
-
-        return jsonify({
-            "text": text,
-            "predicted_label": predicted_label,
-            "confidence": round(float(max_prob), 4),
-            "predicted_class": predicted_class if predicted_label != "Unknown" else None
-        })
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-if __name__ == "__main__":
-    import os
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=port)
+interface.launch()
