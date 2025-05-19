@@ -6,7 +6,7 @@ import numpy as np
 app = Flask(__name__)
 
 # Load model dan tokenizer
-model_path = "CS_Classification"
+model_path = "CS_Classification/"
 tokenizer = DistilBertTokenizer.from_pretrained(model_path)
 print("✅ Model is loading...")
 try:
