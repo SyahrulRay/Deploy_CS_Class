@@ -4,12 +4,12 @@ import tensorflow as tf
 import numpy as np
 
 # Load model & tokenizer
-model = TFDistilBertForSequenceClassification.from_pretrained("model")
-tokenizer = DistilBertTokenizer.from_pretrained("model")
+model = TFDistilBertForSequenceClassification.from_pretrained("CS_Classification")
+tokenizer = DistilBertTokenizer.from_pretrained("CS_Classification")
 
 # Daftar label
 labels = ["delivery", "order", "payment", "refund"]
-confidence_threshold = 0.5  # ambang batas prediksi minimum
+confidence_threshold = 0.7  # ambang batas prediksi minimum
 
 def classify_text(text):
     inputs = tokenizer(text, return_tensors="tf", truncation=True, padding=True)
