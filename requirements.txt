@@ -1,5 +1,6 @@
 flask
 transformers
 tensorflow
+tf-keras
 gunicorn
 numpy
